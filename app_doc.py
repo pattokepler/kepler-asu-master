@@ -14,9 +14,9 @@ import docx
 from langchain.embeddings.base import Embeddings
 
 # Create .streamlit directory and config.toml if they don't exist
-os.makedirs('.streamlit', exist_ok=True)
-with open('.streamlit/config.toml', 'w') as f:
-    f.write('[client]\ntoolbarMode = "minimal"')
+# os.makedirs('.streamlit', exist_ok=True)
+# with open('.streamlit/config.toml', 'w') as f:
+#     f.write('[client]\ntoolbarMode = "minimal"')
 
 # Create a custom embeddings class
 class SentenceTransformersEmbeddings(Embeddings):
