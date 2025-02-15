@@ -1,0 +1,17 @@
+langchain
+langchain_community
+streamlit
+pdfminer.six
+faiss-cpu
+gpt4all
+unstructured
+python-pptx
+langchain_groq
+python-dotenv
+pathlib
+langchain_core
+pymupdf
+PyPDF2
+python-docx
+docx
+sentence_transformers
