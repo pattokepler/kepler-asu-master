@@ -27,7 +27,18 @@ if not groq_api_key:
 # Create a custom embeddings class
 class SentenceTransformersEmbeddings(Embeddings):
     def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):
-        self.model = SentenceTransformer(model_name)
+        # Try loading from the local directory first
+        model_dir = './local_models/all-MiniLM-L6-v2'
+
+        # If model is not cached locally, download it
+        if not os.path.exists(model_dir):
+            print(f"Downloading the model to {model_dir}...")
+            model = SentenceTransformer(model_name)
+            model.save(model_dir)  # Save it locally
+        else:
+            print(f"Loading the model from {model_dir}...")
+
+        self.model = SentenceTransformer(model_dir)  # Load the model from the local directory
 
     def embed_documents(self, texts: list) -> list:
         return self.model.encode(texts, convert_to_tensor=True).tolist()
