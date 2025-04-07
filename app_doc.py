@@ -12,6 +12,17 @@ from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 import docx
 from langchain.embeddings.base import Embeddings
+from dotenv import load_dotenv
+
+
+# Load environment variables from the .env file
+load_dotenv()
+
+# Get the API key from the environment variable
+groq_api_key = os.getenv("GROQ_API_KEY")
+
+if not groq_api_key:
+    raise ValueError("API_KEY is not set")
 
 # Create .streamlit directory and config.toml if they don't exist
 # os.makedirs('.streamlit', exist_ok=True)
@@ -87,8 +98,8 @@ def safe_remove(filepath):
 def get_response(user_query, chat_history, vectorstore=None):
     # Initialize ChatGroq model with your API key
     llm = ChatGroq(
-        model_name="mixtral-8x7b-32768",
-        api_key="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"  # Replace with your actual API key
+        model_name="llama-3.3-70b-versatile",
+        api_key=groq_api_key  # Replace with your actual API key
     )
     
     if vectorstore:

@@ -12,6 +12,7 @@ pathlib
 langchain_core
 pymupdf
 PyPDF2
+torch
 python-docx
 docx
 sentence_transformers
