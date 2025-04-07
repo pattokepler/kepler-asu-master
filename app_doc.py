@@ -1,5 +1,6 @@
 import os
 import time
+import fitz  # PyMuPDF
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -10,7 +11,6 @@ from sentence_transformers import SentenceTransformer
 from langchain_groq.chat_models import ChatGroq
 from langchain.schema import Document
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-import docx
 from langchain.embeddings.base import Embeddings
 from dotenv import load_dotenv
 
@@ -24,11 +24,6 @@ groq_api_key = os.getenv("GROQ_API_KEY")
 if not groq_api_key:
     raise ValueError("API_KEY is not set")
 
-# Create .streamlit directory and config.toml if they don't exist
-# os.makedirs('.streamlit', exist_ok=True)
-# with open('.streamlit/config.toml', 'w') as f:
-#     f.write('[client]\ntoolbarMode = "minimal"')
-
 # Create a custom embeddings class
 class SentenceTransformersEmbeddings(Embeddings):
     def __init__(self, model_name: str = 'all-MiniLM-L6-v2'):
@@ -40,22 +35,26 @@ class SentenceTransformersEmbeddings(Embeddings):
     def embed_query(self, text: str) -> list:
         return self.model.encode(text, convert_to_tensor=True).tolist()
 
-# Function to handle processing the specific .docx
-def process_docx():
-    docx_filename = "2025_FAQ.docx"
+# Function to handle processing the specific PDF
+def process_pdf():
+    pdf_filename = "2025_FAQ.pdf"
     
-    if not os.path.exists(docx_filename):
-        raise ValueError(f".docx file '{docx_filename}' not found in the current directory.")
+    if not os.path.exists(pdf_filename):
+        raise ValueError(f"PDF file '{pdf_filename}' not found in the current directory.")
     
     temp_files = []
     try:
-        # Read text from the .docx file
-        print(f"Reading .docx file: {docx_filename}")
-        doc = docx.Document(docx_filename)
-        text = "\n".join([para.text for para in doc.paragraphs if para.text.strip() != ""])
+        # Read text from the PDF file
+        print(f"Reading PDF file: {pdf_filename}")
+        doc = fitz.open(pdf_filename)  # Open the PDF file with PyMuPDF
+        
+        text = ""
+        for page_num in range(doc.page_count):
+            page = doc.load_page(page_num)
+            text += page.get_text()
 
         if not text:
-            raise ValueError(f"No text extracted from .docx '{docx_filename}'. Please check the file content.")
+            raise ValueError(f"No text extracted from PDF '{pdf_filename}'. Please check the file content.")
         
         # Create Document objects for each chunk of text
         documents = [Document(page_content=text)]
@@ -150,17 +149,16 @@ st.sidebar.image("qr-code.png", width=200)
 st.sidebar.markdown("<small>keplerasuscholars@asu.edu </small>", unsafe_allow_html=True)
 
 # Initialize vectorstore if not available
-if "vectorstore" not in st.session_state:
-    st.session_state.vectorstore = None
-
-# Process the specific .docx file (2025_FAQ_Frequently_Asked_Questions ASU_Kepler.docx)
-if not st.session_state.vectorstore:  # Only process if vectorstore is not already available
+if "vectorstore" not in st.session_state or st.session_state.vectorstore is None:
     try:
+        print("Processing PDF file now...")  # Log when processing starts
         with st.spinner("Processing document..."):
-            st.session_state.vectorstore = process_docx()
+            st.session_state.vectorstore = process_pdf()
         st.sidebar.success("ChatBot Initialized OK!")
     except Exception as e:
-        st.sidebar.error(f"Error processing .docx: {str(e)}")
+        st.sidebar.error(f"Error processing PDF: {str(e)}")
+else:
+    print("Vectorstore already exists, skipping PDF processing.")  # Log if vectorstore is already initialized
 
 # Initialize chat history if not already initialized
 if "chat_history" not in st.session_state:
